@@ -13,7 +13,7 @@ const Vendor = db.define('Vendor', {
     }
 }, {
     freezeTableName: true,
-    timestamps: false,
+    timestamps: true,
 });
 
 module.exports = Vendor;

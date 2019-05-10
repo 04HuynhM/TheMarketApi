@@ -13,7 +13,12 @@ const User = require('../models/userModel');
 const Order = require('../models/orderModel');
 const Vendor = require('../models/vendorModel');
 const Item = require('../models/itemModel');
-const Cart = require('../models/cartModel');
+
+/*
+==============================================================
+User Endpoints
+==============================================================
+ */
 
 /*
 User Login
@@ -110,6 +115,13 @@ router.post('/', cors(), jsonParser, (req, res) => {
         })
     }
 });
+
+function hashPassword(password) {
+    let salt = bcrypt.genSaltSync(10);
+    let hash = bcrypt.hashSync(password, salt);
+    console.log("HASH =====" + hash);
+    return hash
+}
 
 /* Update User
     REQUIRES Authorization header with bearer token
@@ -272,138 +284,5 @@ router.delete('/:id', cors(), jsonParser, passport.authenticate('jwt', { session
     })
 });
 
-function hashPassword(password) {
-    let salt = bcrypt.genSaltSync(10);
-    let hash = bcrypt.hashSync(password, salt);
-    console.log("HASH =====" + hash);
-    return hash
-}
-
-/*
-==============================================================
-Shopping Cart User Endpoints
-==============================================================
- */
-
-/* Get shopping cart for user */
-router.get('/:userId/cart', cors(), passport.authenticate('jwt', { session: false }), (req, res) => {
-    Cart.findOrCreate({
-        where: {
-            userId: req.params.userId
-        }
-        , defaults: {
-            userId: req.params.userId,
-            items: ''
-        }
-    }).then(result => {
-        let cart = result[0]
-        return res.status(200).json({
-            items: cart.items
-        })
-    })
-});
-
-/* Add item to cart
-
-    Takes JSON body of:
-        item: itemId (integer)
-
-    Returns:
-        cart JSON array
- */
-router.put('/:userId/cart/add', cors(), jsonParser, passport.authenticate('jwt', { session: false }), (req, res) => {
-    let item = req.body.item;
-
-    Cart.findOrCreate({
-        where: {
-            userId: req.params.userId
-        }
-        , defaults: {
-            userId: req.params.userId,
-            items: [{
-                itemId: item,
-                quantity: 1
-            }]
-        }
-    }).then(result => {
-        let cart = result[0];
-        let created = result[1];
-
-        // If cart was just created, return new cart
-        if(created) {
-            return res.status(200).json({
-                items: cart
-            })
-        }
-
-        // If cart is not just created, check if item is in cart and alter quantity
-        for(let i = 0; i < cart.length; i++)
-        {
-            if(cart[i].itemId == item)
-            {
-                cart[i].quantity = cart[i].quantity++
-                return res.status(200).json({
-                    cart: cart
-                })
-            }
-        }
-
-        //If cart doesn't have item, add it in and return cart
-        cart.push({
-            itemId: item,
-            quantity: 1
-        }).then(() => {
-            return res.status(200).json({
-                cart: cart
-            })
-        });
-    }).catch(error => {
-        return res.status(500).json({
-            message: 'Error adding item to cart.',
-            error: error
-        })
-    })
-});
-
-/*
-Remove item from cart
-
- */
-router.put('/:userId/cart/remove', cors(), jsonParser, passport.authenticate('jwt', { session: false }), (req, res) => {
-    let item = req.body.item;
-
-    Cart.find({
-        where: {
-            userId: req.params.userId
-        }
-    }).then(cart => {
-        for(let i = 0; i < cart.length; i++)
-        {
-            if(cart[i].itemId == item)
-            {
-                if (cart[i].quantity > 1) {
-                    cart[i].quantity = cart[i].quantity--;
-                    return res.status(200).json({
-                        cart: cart
-                    })
-                } else {
-                    delete cart[i];
-                    return res.status(200).json({
-                        cart: cart
-                    })
-                }
-            }
-        }
-    }).catch(error => {
-        return res.status(500).json({
-            message: 'Error adding item to cart.',
-            error: error
-        })
-    })
-
-
-
-
-
-});
+module.exports = router;
 

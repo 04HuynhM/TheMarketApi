@@ -13,7 +13,7 @@ const Vendor = require('../models/vendorModel');
 const Item = require('../models/itemModel');
 
 /*
-Find vendor by id or name
+Get vendor by id or name
  */
 router.get('/:vendorIdOrName', cors(), (req, res) => {
     Vendor.findAll({
@@ -131,3 +131,5 @@ router.put('/:vendorId/edit', cors(), jsonParser, passport.authenticate('jwt', {
         });
     })
 });
+
+module.exports = router;

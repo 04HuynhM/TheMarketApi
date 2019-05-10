@@ -25,7 +25,7 @@ const Item = db.define('Item', {
     }
 }, {
     freezeTableName: true,
-    timestamps: false,
+    timestamps: true,
 });
 
 module.exports = Item;
