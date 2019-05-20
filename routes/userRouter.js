@@ -54,6 +54,65 @@ router.get('/:userId', cors(), (req, res) => {
 });
 
 /*
+==============================================================
+User Endpoints
+==============================================================
+ */
+
+/*
+Get all users
+ */
+router.get('/', cors(),  (req, res) => {
+    User.findAll()
+      .then(users => {
+        return res.status(200).json(users)
+    }).catch(error => {
+        return res.status(500).json({
+            message: "An error occurred when getting users",
+            error: error
+        })
+    })
+});
+
+/* Get currently logged in user */
+router.get('/me', cors(), passport.authenticate('jwt', { session : false }), (req, res) => {
+    let snippedAuth = req.get('Authorization').replace("Bearer ", "");
+    let decodedAuth = jwt.verify(snippedAuth, secretKey);
+    let me = decodedAuth.userId;
+
+    User.findOne({
+        where: {
+            userId: me
+        }
+    }).then(user => {
+        return res.status(200).json(user);
+    }).catch(error => {
+        return res.status(500).json({
+            message: 'Error finding user',
+            error: error
+        })
+    })
+});
+
+/*
+Get user by ID
+ */
+router.get('/:userId', cors(), (req, res) => {
+    User.findOne({
+        where: {
+            userId: req.params.userId
+        }
+    }).then(user => {
+        return res.status(200).json(user)
+    }).catch(error => {
+        return res.status(500).json({
+            message: "An error occured while fetching user",
+            error: error
+        })
+    })
+});
+
+/*
 User Login
     Takes JSON body of:
         email: string
@@ -82,7 +141,8 @@ router.post('/login', cors(), jsonParser, (req, res) => {
                 expiresIn: 1814400
             });
             res.status(200).json({
-                token: token
+                token: token,
+                userId: user.userId
             })
         } else {
             return res.status(403).json({
