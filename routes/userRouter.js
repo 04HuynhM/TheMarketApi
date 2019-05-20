@@ -75,14 +75,13 @@ router.get('/', cors(),  (req, res) => {
 });
 
 /* Get currently logged in user */
-router.get('/me', cors(), passport.authenticate('jwt', { session : false }), (req, res) => {
+router.get('/current/me', cors(), passport.authenticate('jwt', { session : false }), (req, res) => {
     let snippedAuth = req.get('Authorization').replace("Bearer ", "");
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
-    let me = decodedAuth.userId;
 
     User.findOne({
         where: {
-            userId: me
+            userId: decodedAuth.userId
         }
     }).then(user => {
         return res.status(200).json(user);
