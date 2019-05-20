@@ -141,7 +141,7 @@ router.post('/add', cors(), jsonParser, passport.authenticate('jwt', { session: 
 /*
 Update Address
  */
-router.put(':addressId/update', cors(), jsonParser, passport.authenticate('jwt', { session: falase }), (req, res) => {
+router.put(':addressId/update', cors(), jsonParser, passport.authenticate('jwt', { session: false }), (req, res) => {
     let snippedAuth = req.get('Authorization').replace("Bearer ", "");
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
 
@@ -223,7 +223,7 @@ router.put(':addressId/update', cors(), jsonParser, passport.authenticate('jwt',
 /*
 Delete Address
  */
-router.delete('/:addressId/delete', cors(), jsonParser, passport.authenticate('jwt', { session: falase }), (req, res) => {
+router.delete('/:addressId/delete', cors(), jsonParser, passport.authenticate('jwt', { session: false }), (req, res) => {
     let snippedAuth = req.get('Authorization').replace("Bearer ", "");
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
 

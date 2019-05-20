@@ -8,12 +8,12 @@ const app = express();
 
 const db = require('./config/database');
 
-const userRouter = require('./routes/userRoute');
-const itemRouter = require('./routes/itemRoute');
-const vendorRouter = require('./routes/vendorRoute');
-const cartRouter = require('./routes/cartRoute');
-const reviewRouter = require('./routes/reviewRoute');
-const paymentRouter = require('./routes/paymentRoute');
+const userRouter = require('./routes/userRouter');
+const itemRouter = require('./routes/itemRouter');
+const vendorRouter = require('./routes/vendorRouter');
+const cartRouter = require('./routes/cartRouter');
+// const reviewRouter = require('./routes/reviewRouter');
+const paymentRouter = require('./routes/paymentRouter');
 const addressRouter = require('./routes/addressRouter');
 
 require('./config/passport')(passport);
