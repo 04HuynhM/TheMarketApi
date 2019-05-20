@@ -8,7 +8,7 @@ const Order = db.define('Order', {
         primaryKey: true,
         autoIncrement: true
     },
-    cost: {
+    total: {
         type: Sequelize.INTEGER,
     },
     items: {

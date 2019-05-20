@@ -18,12 +18,16 @@ const Review = require('../models/reviewModel');
 const Item = require('../models/itemModel');
 const Cart = require('../models/cartModel');
 const Order = require('../models/orderModel');
+const Address = require('../models/addressModel');
 
 User.hasOne(Cart, {foreignKey: 'userId'});
 Cart.belongsTo(User, {foreignKey: 'userId'});
 
 User.hasOne(Vendor, {foreignKey: 'userId'});
 Vendor.belongsTo(User, {foreignKey: 'userId'});
+
+User.hasMany(Address, {foreignKey: 'userId'});
+Address.belongsTo(User, {foreignKey: 'userId'});
 
 User.hasMany(Payment, {foreignKey: 'userId'});
 Payment.belongsTo(User, {foreignKey:'userId'});
@@ -39,3 +43,5 @@ Review.belongsTo(User, {foreignKey: 'userId'});
 
 User.hasMany(Order, {foreignKey: 'userId'});
 Order.belongsTo(User, {foreignKey: 'userId'});
+
+Order.belongsTo(Address, {foreignKey: 'addressId'});
