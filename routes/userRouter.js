@@ -21,6 +21,39 @@ User Endpoints
  */
 
 /*
+Get all users
+ */
+router.get('/', cors(), (req, res) => {
+    User.findAll()
+      .then(users => {
+        return res.status(200).json(users)
+    }).catch(error => {
+        return res.status(500).json({
+            message: "An error occurred when getting users",
+            error: error
+        })
+    })
+});
+
+/*
+Get user by ID
+ */
+router.get('/:userId', cors(), (req, res) => {
+    User.findOne({
+        where: {
+            userId: req.params.userId
+        }
+    }).then(user => {
+        return res.status(200).json(user)
+    }).catch(error => {
+        return res.status(500).json({
+            message: "An error occured while fetching user",
+            error: error
+        })
+    })
+});
+
+/*
 User Login
     Takes JSON body of:
         email: string
@@ -31,7 +64,7 @@ User Login
 router.post('/login', cors(), jsonParser, (req, res) => {
     User.findOne( {
         where: {
-            email: { $eq: req.body.email }
+            email: req.body.email
         }
     }).then(user => {
         if(!user) {
@@ -89,7 +122,7 @@ router.post('/', cors(), jsonParser, (req, res) => {
     } else {
         User.findOrCreate({
             where: {
-                email: { $eq: data.email }
+                email: data.email
                 },
             defaults: {
                 email: data.email,
@@ -108,8 +141,9 @@ router.post('/', cors(), jsonParser, (req, res) => {
             }
             return res.status(200).json(user);
         }).catch(error => {
+            console.log("ERROR: " + error);
             return res.status(500).json({
-                message: 'An unknown error occured',
+                message: 'An unknown error occurred',
                 error: error
             })
         })
@@ -136,9 +170,13 @@ function hashPassword(password) {
         User json object
  */
 router.put('/:userId', cors(), jsonParser, passport.authenticate('jwt', { session : false }), (req, res) => {
+    let snippedAuth = req.get('Authorization').replace("Bearer ", "");
+    let decodedAuth = jwt.verify(snippedAuth, secretKey);
+    let loggedInUser = decodedAuth.userId;
+
     User.findOne({
         where: {
-            userId: req.params.userId
+            userId: loggedInUser
         }
     }).then(user => {
         if (!user) {
@@ -146,32 +184,46 @@ router.put('/:userId', cors(), jsonParser, passport.authenticate('jwt', { sessio
                 message: 'User not found'
             })
         }
+
         let data = req.body;
-        if (!data.updatedType ||
-            !data.newValue) {
-            return res.status(204).json({
-                message: 'Body must contain updatedType and newValue key values.' +
-                    'Accepted types: firstName/lastName (string), email (string)'
-            })
-        }
-        let updatedType = data.updatedType;
-        if (updatedType === 'password') {
+        if (!data.firstName && !data.lastName && !data.email) {
             return res.status(400).json({
-                message: 'To change your password, call the relevant endpoints'
+                message: 'Bad request, json body must contain one of the following: ' +
+                    'firstName, lastName or email'
             })
         }
-        let values = {[updatedType] : data.newValue};
-        let selector = {where: { username: req.params.id }};
-        User.update(values, selector)
-            .then(updatedUser => {
-                res.status(200).json(updatedUser)
-            }).catch(error => {
+
+        let newFirstName = data.firstName || user.firstName;
+        let newLastName = data.lastName || user.lastName;
+        let newEmail = data.email || user.email;
+
+        if (data.password && !(bcrypt.compareSync(data.password, user.password))) {
+            return res.status(400).json({
+                message: 'To change your password, call the relevant endpoint'
+            })
+        }
+
+        User.update({
+            firstName: newFirstName,
+            lastName: newLastName,
+            email: newEmail
+        }, { where: {
+                userId: user.userId
+        }
+        }).then(updatedUser => {
+            return res.status(202).json(updatedUser)
+        }).catch(error => {
             return res.status(500).json({
-                message: 'There was an error when updating this user.',
+                message: 'Error while updating user',
                 error: error
-            });
-        });
-    })
+            })
+        })
+    }).catch(error => {
+        return res.status(500).json({
+            message: 'Error while finding user',
+            error: error
+        })
+    });
 });
 
 /* Delete User
@@ -224,46 +276,47 @@ router.delete('/:id', cors(), jsonParser, passport.authenticate('jwt', { session
                             error: error
                         })
                     })
-                }
-                console.log('User is a vendor. Deleting items.');
-                Item.destroy({
-                    where: {
-                        vendorId: vendor.vendorId
-                    }
-                }).then(() => {
-                    console.log('Items deleted, deleting vendor');
-                    Vendor.destroy({
+                } else {
+                    console.log('User is a vendor. Deleting items.');
+                    Item.destroy({
                         where: {
-                            userId: vendor.userId
+                            vendorId: vendor.vendorId
                         }
                     }).then(() => {
-                        console.log('Vendor deleted. Deleting user.');
-                        User.destroy({
+                        console.log('Items deleted, deleting vendor');
+                        Vendor.destroy({
                             where: {
-                                userId: userToBeDeleted.userId
+                                userId: vendor.userId
                             }
                         }).then(() => {
-                            return res.status(200).json({
-                                message: 'User, vendor and items deleted successfully'
+                            console.log('Vendor deleted. Deleting user.');
+                            User.destroy({
+                                where: {
+                                    userId: userToBeDeleted.userId
+                                }
+                            }).then(() => {
+                                return res.status(200).json({
+                                    message: 'User, vendor and items deleted successfully'
+                                })
+                            }).catch(error => {
+                                return res.status(500).json({
+                                    message: 'Error when deleting vendor user',
+                                    error: error
+                                })
                             })
                         }).catch(error => {
                             return res.status(500).json({
-                                message: 'Error when deleting vendor user',
+                                message: 'Error when deleting vendor',
                                 error: error
                             })
                         })
                     }).catch(error => {
                         return res.status(500).json({
-                            message: 'Error when deleting vendor',
+                            message: 'Error when deleting items',
                             error: error
                         })
                     })
-                }).catch(error => {
-                    return res.status(500).json({
-                        message: 'Error when deleting items',
-                        error: error
-                    })
-                })
+                }
             }).catch(error => {
                 return res.status(500).json({
                     message: 'Error when searching for vendor',
