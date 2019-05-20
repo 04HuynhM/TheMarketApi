@@ -12,7 +12,6 @@ const userRouter = require('./routes/userRouter');
 const itemRouter = require('./routes/itemRouter');
 const vendorRouter = require('./routes/vendorRouter');
 const cartRouter = require('./routes/cartRouter');
-// const reviewRouter = require('./routes/reviewRouter');
 const paymentRouter = require('./routes/paymentRouter');
 const addressRouter = require('./routes/addressRouter');
 

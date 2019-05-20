@@ -221,43 +221,63 @@ router.post('/checkout', cors(), jsonParser, passport.authenticate('jwt', { sess
             userId: loggedInUser
         }
     }).then(cart => {
-        if (cart.items === '') {
+        if (cart.items === "") {
             return res.status(400).json({
                 message: 'Cart is empty'
             })
         }
+        let cartItems = cart.items;
         let itemIdArray = [];
 
-        for (let i = 0; i<cart.length; i++) {
-            itemIdArray.push(cart[i].itemId)
+        console.log(cartItems);
+        for (let i = 0; i<cartItems.length; i++) {
+            let quantity = cartItems[i].quantity;
+            for(let j = 0; j<quantity; j++) {
+                console.log(cartItems[i]);
+                let item = cartItems[i];
+                itemIdArray.push(item.itemId);
+            }
         }
-
         Item.findAll({
             where: {
                 itemId: itemIdArray
             }
         }).then(items => {
-            console.log(items);
-
             let price = 0;
-
+            let itemsForOrder = [];
             for (let i = 0; i<items.length; i++) {
+                let quantity = 0;
+                for (let j = 0; j < itemIdArray.length; j++) {
+                    if (itemIdArray[j] === items[i].itemId) {
+                        itemsForOrder.push(items[i]);
+                        quantity++
+                    }
+                }
+                console.log(quantity);
                 let itemPrice = items[i].price;
-                let quantity = cart[i].quantity;
-
                 let total = itemPrice * quantity;
                 price += total;
             }
-
             let addressId = req.body.addressId;
-
             Order.create({
                 total: price,
-                items: items,
+                items: itemsForOrder,
                 userId: loggedInUser,
                 addressId: addressId
             }).then(order => {
-                return res.status(201).json(order)
+                Cart.update({
+                    items: ""
+                }, { where: {
+                    userId: loggedInUser
+                    }
+                }).then(() => {
+                    return res.status(201).json(order)
+                }).catch(error => {
+                    return res.status(500).json({
+                        message: 'Error while clearing cart',
+                        error: error
+                    })
+                })
             }).catch(error => {
                 return res.status(500).json({
                     message: 'Error while creating order',
@@ -271,6 +291,7 @@ router.post('/checkout', cors(), jsonParser, passport.authenticate('jwt', { sess
             })
         })
     }).catch(error => {
+        console.log(error);
         return res.status(500).json({
             message: 'Error while finding cart',
             error: error
