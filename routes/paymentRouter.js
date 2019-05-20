@@ -29,7 +29,7 @@ router.post('/', cors(), jsonParser, passport.authenticate('jwt', { session: fal
             })
         }
         let data = req.body;
-        if (data.nameOnCard || data.cardNumber || data.expiryDate) {
+        if (!data.nameOnCard || !data.cardNumber || !data.expiryDate) {
             return res.status(400).json({
                 message: 'Json body must contain: nameOnCard, cardNumber, expiryDate'
             })
@@ -137,7 +137,7 @@ router.put('/:paymentId', cors(), jsonParser, passport.authenticate('jwt', { ses
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
 
     let data = req.body;
-    if (data.nameOnCard && data.cardNumber && data.expiryDate) {
+    if (!data.nameOnCard && !data.cardNumber && !data.expiryDate) {
         return res.status(400).json({
             message: 'Json body must contain at least one of: nameOnCard, cardNumber, expiryDate'
         })

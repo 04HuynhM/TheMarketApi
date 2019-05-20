@@ -44,4 +44,4 @@ Review.belongsTo(User, {foreignKey: 'userId'});
 User.hasMany(Order, {foreignKey: 'userId'});
 Order.belongsTo(User, {foreignKey: 'userId'});
 
-Order.hasOne(Address, {foreignKey: 'addressId'});
+Order.belongsTo(Address, {foreignKey: 'addressId'});

@@ -20,7 +20,7 @@ Address Endpoints
 /*
 Get Addresses for User
  */
-router.get('/:userId', cors(), passport.authenticate('jwt', { session : false }), (req, res) => {
+router.get('/user/:userId', cors(), passport.authenticate('jwt', { session : false }), (req, res) => {
     let snippedAuth = req.get('Authorization').replace("Bearer ", "");
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
 
@@ -93,6 +93,17 @@ router.get('/:addressId', cors(), passport.authenticate('jwt', { session : false
 
 /*
 Add Address
+
+Takes JSON Body of:
+    {
+        name: String,
+        addressLineOne: String,
+        addressLineTwo: String,
+        city: String,
+        country: String,
+        postcode: String,
+        userId: String
+    }
 */
 router.post('/add', cors(), jsonParser, passport.authenticate('jwt', { session: false}), (req, res) => {
     let snippedAuth = req.get('Authorization').replace("Bearer ", "");
@@ -140,8 +151,19 @@ router.post('/add', cors(), jsonParser, passport.authenticate('jwt', { session: 
 
 /*
 Update Address
+
+Takes JSON Body of (one or multiple):
+    {
+        name: String,
+        addressLineOne: String,
+        addressLineTwo: String,
+        city: String,
+        country: String,
+        postcode: String,
+        userId: String
+    }
  */
-router.put(':addressId/update', cors(), jsonParser, passport.authenticate('jwt', { session: false }), (req, res) => {
+router.put('/:addressId', cors(), jsonParser, passport.authenticate('jwt', { session: false }), (req, res) => {
     let snippedAuth = req.get('Authorization').replace("Bearer ", "");
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
 
@@ -223,7 +245,7 @@ router.put(':addressId/update', cors(), jsonParser, passport.authenticate('jwt',
 /*
 Delete Address
  */
-router.delete('/:addressId/delete', cors(), jsonParser, passport.authenticate('jwt', { session: false }), (req, res) => {
+router.delete('/:addressId', cors(), jsonParser, passport.authenticate('jwt', { session: false }), (req, res) => {
     let snippedAuth = req.get('Authorization').replace("Bearer ", "");
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
 

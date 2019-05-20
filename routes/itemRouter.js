@@ -34,15 +34,33 @@ router.get('/', cors(), (req, res) => {
 /*
 Get items by name or id
  */
-router.get('/:itemIdOrName', cors(), (req, res) => {
-    Item.findAll({
+router.get('/:itemId', cors(), (req, res) => {
+    Item.findOne({
         where: {
-            where: {
-                $or: [
-                    { itemId: { $eq: req.params.itemIdOrName }},
-                    { name: { $eq: req.params.itemIdOrName }}
-                ]
-            }
+            itemId :req.params.itemId
+        }
+    }).then(items => {
+        if (!items) {
+            return res.status(404).json({
+                message: 'No items found'
+            })
+        }
+        return res.status(200).json(items)
+    }).catch(error => {
+        return res.status(500).json({
+            message: 'Error when finding items',
+            error: error
+        })
+    });
+});
+
+/*
+Get items by name
+ */
+router.get('/name/:itemName', cors(), (req, res) => {
+    Item.findOne({
+        where: {
+            name:req.params.itemName
         }
     }).then(items => {
         if (!items) {
@@ -61,6 +79,16 @@ router.get('/:itemIdOrName', cors(), (req, res) => {
 
 /*
 Post an item
+
+Takes JSON Body of:
+{
+    name: String,
+    price: int,
+    description: String,
+    category: String,
+    vendorId: int
+}
+
  */
 router.post('/', cors(), jsonParser, passport.authenticate('jwt', {session: false}), (req, res) => {
     let snippedAuth = req.get('Authorization').replace("Bearer ", "");
@@ -122,7 +150,6 @@ router.put('/:itemId', cors(), jsonParser, passport.authenticate('jwt', {session
                 message: 'User is not a vendor'
             })
         }
-
         Item.findOne({
             where: {
                 itemId: req.params.itemId
@@ -201,8 +228,7 @@ router.delete('/:itemId', cors(), passport.authenticate('jwt', { session: false 
         }
         Item.findOne({
             where: {
-                itemId: req.params.itemId,
-                vendorId: vendor.vendorId
+                itemId: req.params.itemId
             }
         }).then(item => {
             if (!item) {
@@ -212,19 +238,24 @@ router.delete('/:itemId', cors(), passport.authenticate('jwt', { session: false 
             }
             Review.destroy({
                 where: {
-                    itemId: req.params.itemId,
-                    vendor: vendor.vendorId
+                    itemId: req.params.itemId
                 }
-            }).then(updatedRows => {
-                if (updatedRows>0) {
+            }).then(() => {
+                Item.destroy({
+                    where: {
+                        itemId: item.itemId
+                    }
+                }).then(result => {
                     return res.status(200).json({
-                        message: 'Item deleted successfully'
+                        message: 'Item deleted successfully',
+                        resultCode: result
                     })
-                } else {
-                    return res.status(400).json({
-                        message: 'Something went wrong, Item not deleted'
+                }).catch(error => {
+                    return res.status(500).json({
+                        message: 'Error when deleting item',
+                        error: error.toJSON()
                     })
-                }
+                })
             }).catch(error => {
                 return res.status(500).json({
                     message: 'Error while destroying item',
@@ -322,6 +353,7 @@ router.post('/:itemId/review', cors(), jsonParser, passport.authenticate('jwt', 
                 })
             }
         }).catch(error => {
+            console.log(error);
             return res.status(500).json({
                 message: 'Error when creating review',
                 error: error
@@ -407,6 +439,7 @@ router.put('/:itemId/review', cors(), jsonParser, passport.authenticate('jwt', {
                     })
                 }
             }).catch(error => {
+                console.log(error);
                 return res.status(500).json({
                     message: 'Error while updating review',
                     error: error

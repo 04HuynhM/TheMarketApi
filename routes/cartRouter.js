@@ -21,12 +21,15 @@ Shopping Cart Endpoints
 
 /* Get shopping cart for user */
 router.get('/', cors(), jsonParser, passport.authenticate('jwt', { session: false }), (req, res) => {
+    let snippedAuth = req.get('Authorization').replace("Bearer ", "");
+    let decodedAuth = jwt.verify(snippedAuth, secretKey);
+    let loggedInUser = decodedAuth.userId;
     Cart.findOrCreate({
         where: {
-            userId: req.params.userId
+            userId: loggedInUser
         }
         , defaults: {
-            userId: req.params.userId,
+            userId: loggedInUser,
             items: ''
         }
     }).then(result => {
@@ -50,7 +53,7 @@ router.put('/add', cors(), jsonParser, passport.authenticate('jwt', { session: f
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
     let loggedInUser = decodedAuth.userId;
 
-    let item = req.body.item;
+    let itemId = req.body.itemId;
 
     Cart.findOrCreate({
         where: {
@@ -59,43 +62,79 @@ router.put('/add', cors(), jsonParser, passport.authenticate('jwt', { session: f
         , defaults: {
             userId: loggedInUser,
             items: [{
-                itemId: item,
+                itemId: itemId,
                 quantity: 1
             }]
         }
     }).then(result => {
-        let cart = result[0];
+        let cartObject = result[0];
         let created = result[1];
 
         // If cart was just created, return new cart
         if(created) {
             return res.status(200).json({
-                items: cart
+                items: cartObject.items
             })
         }
 
         // If cart is not just created, check if item is in cart and alter quantity
-        for(let i = 0; i < cart.length; i++)
+        let items = cartObject.items;
+        if (items == "") {
+            items = [];
+        }
+        let isAdded = false;
+        for(let i = 0; i < items.length; i++)
         {
-            if(cart[i].itemId == item)
+            if(items[i].itemId == itemId)
             {
-                cart[i].quantity = cart[i].quantity++
-                return res.status(200).json({
-                    cart: cart
-                })
+                items[i].quantity = items[i].quantity+1;
+                isAdded = true;
+                break;
             }
         }
-
-        //If cart doesn't have item, add it in and return cart
-        cart.push({
-            itemId: item,
-            quantity: 1
-        }).then(() => {
-            return res.status(200).json({
-                cart: cart
+        if (isAdded) {
+            console.log('updating quantity');
+            Cart.update({
+                items: items
+            }, {
+                where: {
+                    userId: loggedInUser
+                }
+            }).then(() => {
+                return res.status(200).json(items)
+            }).catch(error => {
+                return res.status(500).json({
+                    message: 'Error after altering quantity.',
+                    error: error
+                })
             })
-        });
+        } else {
+            console.log('Updating raw array');
+            //If cart doesn't have item, add it in and return cart
+            items.push({
+                itemId: itemId,
+                quantity: 1
+            });
+
+            Cart.update({
+                items: items
+            }, {
+                where: {
+                    userId: loggedInUser
+                }
+            }).then(() => {
+                return res.status(200).json({
+                    cart: items
+                })
+            }).catch(error => {
+                return res.status(500).json({
+                    message: 'Error after adding new item.',
+                    error: error
+                })
+            })
+        }
     }).catch(error => {
+        console.log(error);
         return res.status(500).json({
             message: 'Error adding item to cart.',
             error: error
@@ -112,33 +151,58 @@ router.put('/remove', cors(), jsonParser, passport.authenticate('jwt', { session
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
     let loggedInUser = decodedAuth.userId;
 
-    let item = req.body.item;
+    let itemId = req.body.itemId;
 
-    Cart.find({
+    Cart.findOne({
         where: {
             userId: loggedInUser
         }
     }).then(cart => {
-        for(let i = 0; i < cart.length; i++)
+        let items = cart.items;
+        if (items == "") {
+            return res.status(404).json({
+                message: 'No items are in the cart'
+            })
+        }
+        let isRemoved = false;
+        for(let i = 0; i < items.length; i++)
         {
-            if(cart[i].itemId == item)
+            if(items[i].itemId == itemId)
             {
-                if (cart[i].quantity > 1) {
-                    cart[i].quantity = cart[i].quantity--;
-                    return res.status(200).json({
-                        cart: cart
-                    })
+                if (items[i].quantity > 1) {
+                    items[i].quantity = items[i].quantity-1;
+                    isRemoved = true;
+                    break;
                 } else {
-                    delete cart[i];
-                    return res.status(200).json({
-                        cart: cart
-                    })
+                    items.splice(i, 1);
+                    isRemoved = true;
                 }
             }
         }
+        if (isRemoved) {
+            Cart.update({
+                items: items
+            }, {
+                where: {
+                    userId: loggedInUser
+                }
+            }).then(() => {
+                return res.status(200).json(items)
+            }).catch(error => {
+                console.log(error)
+                return res.status(500).json({
+                    message: 'Error while updating cart.',
+                    error: error
+                })
+            })
+        } else {
+            return res.status(404).json({
+                message: 'Item is not in cart'
+            })
+        }
     }).catch(error => {
         return res.status(500).json({
-            message: 'Error adding item to cart.',
+            message: 'Error removing item to cart.',
             error: error
         })
     })
