@@ -116,6 +116,7 @@ router.post('/', cors(), jsonParser, passport.authenticate('jwt', {session: fals
         }
 
         let bodyImageUrl = data.imageUrl || "";
+        let itemRating = 0;
 
         Item.create({
             name: data.name,
@@ -123,7 +124,8 @@ router.post('/', cors(), jsonParser, passport.authenticate('jwt', {session: fals
             description: data.description,
             category: data.category,
             imageUrl: bodyImageUrl,
-            vendorId: vendor.vendorId
+            vendorId: vendor.vendorId,
+            rating: itemRating
         }).then(newItem => {
             return res.status(201).json(newItem)
         }).catch(error => {
