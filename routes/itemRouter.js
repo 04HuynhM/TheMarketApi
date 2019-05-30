@@ -127,7 +127,7 @@ router.post('/', cors(), jsonParser, passport.authenticate('jwt', {session: fals
             vendorId: vendor.vendorId,
             rating: itemRating
         }).then(newItem => {
-            return res.status(201).json(newItem)
+            return res.status(200).json(newItem)
         }).catch(error => {
             return res.status(500).json({
                 message: 'Error when created item',
@@ -196,7 +196,7 @@ router.put('/:itemId', cors(), jsonParser, passport.authenticate('jwt', {session
             }, { where: {
                 itemId: item.itemId
             }}).then(updatedItem => {
-                return res.status(202).json(updatedItem)
+                return res.status(200).json(updatedItem)
             }).catch(error => {
                 return res.status(500).json({
                     message: 'Error while updating item',
@@ -351,11 +351,11 @@ router.post('/:itemId/review', cors(), jsonParser, passport.authenticate('jwt', 
             let ratingResult = handleItemRating(item.itemId);
 
             if (ratingResult.success) {
-                return res.status(201).json(results[0])
+                return res.status(200).json(results[0])
             } else if (!ratingResult.success && !ratingResult.error) {
-                return res.status(201).json(results[0])
+                return res.status(200).json(results[0])
             } else if (!ratingResult.success && ratingResult.error) {
-                return res.status(201).json({
+                return res.status(200).json({
                     message: 'Review was created but item rating failed to update, please call refresh rating endpoint (base/item/:itemId/update-rating)',
                     review: results[0],
                     error: ratingResult.error
@@ -428,11 +428,11 @@ router.put('/:itemId/review', cors(), jsonParser, passport.authenticate('jwt', {
                 if (rowsUpdated>0) {
                     let updateRatingResult = handleItemRating(item.itemId);
                     if(updateRatingResult.success) {
-                        return res.status(201).json({
+                        return res.status(200).json({
                             message: 'Review updated successfully'
                         })
                     } else if(!updateRatingResult.error){
-                        return res.status(201).json({
+                        return res.status(200).json({
                             message: 'Review updated successfully'
                         })
                     } else if(!updateRatingResult.success && updateRatingResult.error) {
