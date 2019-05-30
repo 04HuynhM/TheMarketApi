@@ -134,7 +134,7 @@ router.post('/add', cors(), jsonParser, passport.authenticate('jwt', { session: 
             postcode: data.postcode,
             userId: decodedAuth.userId
         }).then(address => {
-            return res.status(201).json(address)
+            return res.status(200).json(address)
         }).catch(error => {
             return res.status(500).json({
                 message: 'Error when creating address',
