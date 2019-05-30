@@ -121,7 +121,7 @@ router.post('/', cors(), jsonParser, passport.authenticate('jwt', {session: fals
         }
     }).then(result => {
         if (result[1]) {
-            return res.status(201).json({
+            return res.status(200).json({
                 vendor: result[0]
             })
         } else {
