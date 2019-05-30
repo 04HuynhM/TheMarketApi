@@ -172,7 +172,7 @@ router.put('/:itemId', cors(), jsonParser, passport.authenticate('jwt', {session
             }
             let data = req.body;
 
-            if (!data.name && !data.description && !data.category && !data.price) {
+            if (!data.name && !data.description && !data.category && !data.price && !data.rating) {
                 return res.status(400).json({
                     message: 'Bad request, json body must contain one of the following: ' +
                         'name, description, category or price'
