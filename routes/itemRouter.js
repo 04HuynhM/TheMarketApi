@@ -565,7 +565,7 @@ function handleItemRating(itemId) {
             }
         }
 
-        let newRating = ((5 * fiveStars) + (4 * fourStars) + (3 * threeStars) + (2 * twoStars) + oneStar);
+        let newRating = (((5 * fiveStars) + (4 * fourStars) + (3 * threeStars) + (2 * twoStars) + oneStar)/(fiveStars+fourStars+threeStars+twoStars+oneStar));
 
         Item.update({
             rating: newRating
