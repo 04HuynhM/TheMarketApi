@@ -45,3 +45,4 @@ User.hasMany(Order, {foreignKey: 'userId'});
 Order.belongsTo(User, {foreignKey: 'userId'});
 
 Order.belongsTo(Address, {foreignKey: 'addressId'});
+Order.belongsTo(Payment, {foreignKey: 'paymentId'});
