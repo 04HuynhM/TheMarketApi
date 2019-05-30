@@ -40,7 +40,7 @@ router.post('/', cors(), jsonParser, passport.authenticate('jwt', { session: fal
             expiryDate: data.expiryDate,
             userId: decodedAuth.userId
         }).then(payment => {
-            return res.status(201).json(payment)
+            return res.status(200).json(payment)
         }).catch(error => {
             return res.status(500).json({
                 message: 'Error when creating payment option',
