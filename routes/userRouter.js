@@ -324,7 +324,7 @@ router.put('/:userId', cors(), jsonParser, passport.authenticate('jwt', { sessio
                 userId: user.userId
         }
         }).then(updatedUser => {
-            return res.status(202).json(updatedUser)
+            return res.status(200).json(updatedUser)
         }).catch(error => {
             return res.status(500).json({
                 message: 'Error while updating user',
