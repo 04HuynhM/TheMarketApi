@@ -105,7 +105,7 @@ router.post('/', cors(), jsonParser, passport.authenticate('jwt', {session: fals
                 message: 'Forbidden, user is not a vendor'
             })
         }
-        let data = req.body;
+        const data = req.body;
         if (!data.name ||
             !data.price ||
             !data.description ||
@@ -172,10 +172,10 @@ router.put('/:itemId', cors(), jsonParser, passport.authenticate('jwt', {session
             }
             let data = req.body;
 
-            if (!data.name && !data.description && !data.category && !data.price && !data.rating) {
+            if (!data.name && !data.description && !data.category && !data.price && !data.imageUrl && !data.rating) {
                 return res.status(400).json({
                     message: 'Bad request, json body must contain one of the following: ' +
-                        'name, description, category, price or rating'
+                        'name, description, category, imageUrl, price or rating'
                 })
             }
 
