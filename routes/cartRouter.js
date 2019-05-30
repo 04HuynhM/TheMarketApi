@@ -280,7 +280,7 @@ router.post('/checkout', cors(), jsonParser, passport.authenticate('jwt', { sess
                     }
                 }).then(() => {
                     sortEmailDetails(order, loggedInUser);
-                    return res.status(201).json(order)
+                    return res.status(200).json(order)
                 }).catch(error => {
                     return res.status(500).json({
                         message: 'Error while clearing cart',
