@@ -216,6 +216,12 @@ router.post('/checkout', cors(), jsonParser, passport.authenticate('jwt', { sess
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
     let loggedInUser = decodedAuth.userId;
 
+    if (!req.body.addressId || !req.body.paymentId) {
+        return res.status(400).json({
+            message:'Json body must have addressId and paymentId'
+        })
+    }
+
     Cart.findOne({
         where: {
             userId: loggedInUser
@@ -263,7 +269,8 @@ router.post('/checkout', cors(), jsonParser, passport.authenticate('jwt', { sess
                 total: price,
                 items: itemsForOrder,
                 userId: loggedInUser,
-                addressId: addressId
+                addressId: addressId,
+                paymentId: req.body.paymentId
             }).then(order => {
                 Cart.update({
                     items: ""
