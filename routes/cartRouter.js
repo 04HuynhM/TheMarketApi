@@ -6,12 +6,14 @@ const jwt = require('jsonwebtoken');
 const jsonParser = bodyParser.json();
 const cors = require('cors');
 const nodemailer = require('nodemailer');
-
+const MailGen = require('mailgen');
 const secretKey = process.env.SECRETKEY;
 
 const Cart = require('../models/cartModel');
 const Order = require('../models/orderModel');
 const Item = require('../models/itemModel');
+const User = require('../models/userModel');
+const Address = require('../models/addressModel');
 
 /*
 ==============================================================
@@ -30,7 +32,7 @@ router.get('/', cors(), jsonParser, passport.authenticate('jwt', { session: fals
         }
         , defaults: {
             userId: loggedInUser,
-            items: ''
+            items: []
         }
     }).then(result => {
         let cart = result[0];
@@ -229,7 +231,6 @@ router.post('/checkout', cors(), jsonParser, passport.authenticate('jwt', { sess
         let cartItems = cart.items;
         let itemIdArray = [];
 
-        console.log(cartItems);
         for (let i = 0; i<cartItems.length; i++) {
             let quantity = cartItems[i].quantity;
             for(let j = 0; j<quantity; j++) {
@@ -266,11 +267,12 @@ router.post('/checkout', cors(), jsonParser, passport.authenticate('jwt', { sess
                 addressId: addressId
             }).then(order => {
                 Cart.update({
-                    items: ""
+                    items: []
                 }, { where: {
                     userId: loggedInUser
                     }
                 }).then(() => {
+                    sortEmailDetails(order, loggedInUser);
                     return res.status(201).json(order)
                 }).catch(error => {
                     return res.status(500).json({
@@ -299,14 +301,72 @@ router.post('/checkout', cors(), jsonParser, passport.authenticate('jwt', { sess
     })
 });
 
-function sendOrderEmail(userId, order) {
+function sortEmailDetails(order, user) {
     User.findOne({
         where: {
-            userId: userId
+            userId: user
         }
     }).then(user => {
-
+        let items = order.items;
+        let orderId = order.orderId;
+        let finalItems = [];
+        for (let i = 0; i<items.length; i++) {
+            finalItems.push({
+                name: items[i].name,
+                description: items[i].description,
+                price: items[i].price,
+            })
+        }
+        createEmail(orderId, finalItems, user);
+    }).catch(error => {
+        console.log(error)
     })
+}
+
+function createEmail(orderId, emailItemDetails, user) {
+    let emailSubject = `TheMarket - Order confirmation for order ID: ${orderId}`;
+    let mailGenerator = new MailGen({
+        theme: 'default',
+        product:{
+            name: 'TheMarket',
+            link: 'https://www.themarket.com',
+            logo: ''
+        }
+    });
+
+    let email = {
+        body: {
+            name: user.firstName + ' ' + user.lastName,
+            intro: `Your order (ID number: ${orderId}) has been confirmed with us and will be shipped soon!`,
+            table: {
+                data: emailItemDetails,
+            },
+            outro: 'Thank you for your purchase!'
+        }
+    };
+
+    let emailBody = mailGenerator.generate(email);
+
+    let transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.EMAIL_PASSWORD
+        }
+    });
+    const mailOptions = {
+        from: process.env.EMAIL,
+        to: user.email,
+        subject: emailSubject,
+        html: emailBody
+    };
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.log(error)
+        } else {
+            console.log(info)
+        }
+    });
 }
 
 module.exports = router;
