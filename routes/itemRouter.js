@@ -115,11 +115,14 @@ router.post('/', cors(), jsonParser, passport.authenticate('jwt', {session: fals
             })
         }
 
+        let bodyImageUrl = data.imageUrl || "";
+
         Item.create({
             name: data.name,
             price: data.price,
             description: data.description,
             category: data.category,
+            imageUrl: bodyImageUrl,
             vendorId: vendor.vendorId
         }).then(newItem => {
             return res.status(201).json(newItem)
@@ -178,12 +181,14 @@ router.put('/:itemId', cors(), jsonParser, passport.authenticate('jwt', {session
             let newDescription = req.body.description || item.description;
             let newPrice = req.body.price || item.price;
             let newCategory = req.body.category || item.category;
+            let newImageUrl = req.body.imageUrl || item.imageUrl;
 
             Item.update({
                 name: newName,
                 description: newDescription,
                 price: newPrice,
-                category: newCategory
+                category: newCategory,
+                imageUrl: newImageUrl
             }, { where: {
                 itemId: item.itemId
             }}).then(updatedItem => {

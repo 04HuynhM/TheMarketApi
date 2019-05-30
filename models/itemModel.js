@@ -9,19 +9,22 @@ const Item = db.define('Item', {
         autoIncrement: true
     },
     name: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
     },
     price: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER
     },
     description: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
     },
     rating: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER
     },
     category: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
+    },
+    imageUrl: {
+        type: Sequelize.STRING
     }
 }, {
     freezeTableName: true,
