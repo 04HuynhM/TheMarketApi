@@ -239,7 +239,7 @@ function createEmail(user) {
                 button: {
                     color: '#22BC66',
                     text: 'Start Shopping!',
-                    link: 'https:www.reddit.com'
+                    link: 'http://themarketshh.s3-website.eu-north-1.amazonaws.com/'
                 }
             },
             outro: 'We look forward to serving you soon!'
