@@ -6,6 +6,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const jsonParser = bodyParser.json();
 const cors = require('cors');
+const nodemailer = require('nodemailer');
+const MailGen = require('mailgen');
 
 const secretKey = process.env.SECRETKEY;
 
@@ -198,6 +200,7 @@ router.post('/', cors(), jsonParser, (req, res) => {
                     message: 'Email already associated with another account.',
                 })
             }
+            createEmail(user);
             return res.status(200).json(user);
         }).catch(error => {
             console.log("ERROR: " + error);
@@ -214,6 +217,57 @@ function hashPassword(password) {
     let hash = bcrypt.hashSync(password, salt);
     console.log("HASH =====" + hash);
     return hash
+}
+
+function createEmail(user) {
+    let emailSubject = `Welcome to TheMarket ${user.firstName} ${user.lastName}!`;
+    let mailGenerator = new MailGen({
+        theme: 'default',
+        product:{
+            name: 'TheMarket',
+            link: 'https://www.themarket.com',
+            logo: ''
+        }
+    });
+
+    let email = {
+        body: {
+            name: user.firstName + ' ' + user.lastName,
+            intro: 'Thank you for registering with us.',
+            action: {
+                instructions: 'To get shopping, please click the button below.',
+                button: {
+                    color: '#22BC66',
+                    text: 'Start Shopping!',
+                    link: 'https:www.reddit.com'
+                }
+            },
+            outro: 'We look forward to serving you soon!'
+        }
+    };
+
+    let emailBody = mailGenerator.generate(email);
+
+    let transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.EMAIL_PASSWORD
+        }
+    });
+    const mailOptions = {
+        from: process.env.EMAIL,
+        to: user.email,
+        subject: emailSubject,
+        html: emailBody
+    };
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.log(error)
+        } else {
+            console.log(info)
+        }
+    });
 }
 
 /* Update User
@@ -288,18 +342,13 @@ router.put('/:userId', cors(), jsonParser, passport.authenticate('jwt', { sessio
 /* Delete User
 REQUIRES AUTHORIZATION
  */
-router.delete('/:id', cors(), jsonParser, passport.authenticate('jwt', { session : false }), (req, res) => {
+router.delete('/', cors(), jsonParser, passport.authenticate('jwt', { session : false }), (req, res) => {
     let snippedAuth = req.get('Authorization').replace("Bearer ", "");
     let decodedAuth = jwt.verify(snippedAuth, secretKey);
-    let isUser = decodedAuth.userId == req.params.id;
-    if (!isUser) {
-        return res.status(401).json({
-            message: 'Unauthorized.'
-        });
-    }
+    let userId = decodedAuth.userId;
     User.findOne({
         where : {
-            userId: req.params.id
+            userId: userId
         }
     }).then(userToBeDeleted => {
         if (!userToBeDeleted) {

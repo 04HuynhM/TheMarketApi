@@ -14,6 +14,7 @@ const vendorRouter = require('./routes/vendorRouter');
 const cartRouter = require('./routes/cartRouter');
 const paymentRouter = require('./routes/paymentRouter');
 const addressRouter = require('./routes/addressRouter');
+const orderRouter = require('./routes/orderRouter');
 
 require('./config/passport')(passport);
 app.use(passport.initialize());
@@ -26,6 +27,7 @@ app.use('/cart', cartRouter);
 app.use('/vendor', vendorRouter);
 app.use('/payment', paymentRouter);
 app.use('/address', addressRouter);
+app.use('/order', orderRouter);
 
 const PORT = process.env.PORT || 5000;
 

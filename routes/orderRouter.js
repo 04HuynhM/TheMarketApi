@@ -116,7 +116,6 @@ router.delete('/:orderId', cors(),passport.authenticate('jwt', {session: false})
         Order.destroy({
             where: {
                 orderId: req.params.orderId,
-                userId: user.userid
             }
         }).then(result => {
             if (result === 0) {
@@ -141,8 +140,6 @@ router.delete('/:orderId', cors(),passport.authenticate('jwt', {session: false})
             error: error
         })
     })
-
-
-
-
 });
+
+module.exports = router;
