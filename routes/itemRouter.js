@@ -175,7 +175,7 @@ router.put('/:itemId', cors(), jsonParser, passport.authenticate('jwt', {session
             if (!data.name && !data.description && !data.category && !data.price && !data.rating) {
                 return res.status(400).json({
                     message: 'Bad request, json body must contain one of the following: ' +
-                        'name, description, category or price'
+                        'name, description, category, price or rating'
                 })
             }
 
@@ -184,13 +184,15 @@ router.put('/:itemId', cors(), jsonParser, passport.authenticate('jwt', {session
             let newPrice = req.body.price || item.price;
             let newCategory = req.body.category || item.category;
             let newImageUrl = req.body.imageUrl || item.imageUrl;
+            let newItemRating = req.body.rating || item.rating;
 
             Item.update({
                 name: newName,
                 description: newDescription,
                 price: newPrice,
                 category: newCategory,
-                imageUrl: newImageUrl
+                imageUrl: newImageUrl,
+                rating: newItemRating
             }, { where: {
                 itemId: item.itemId
             }}).then(updatedItem => {
